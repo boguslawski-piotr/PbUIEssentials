@@ -12,15 +12,11 @@ let package = Package(
             targets: ["PbUIEssentials"]),
     ],
     dependencies: [
-        // .package(url: /* package url */, from: "1.0.0"),
         .package(path: "../PbEssentials")
     ],
     targets: [
         .target(
             name: "PbUIEssentials",
             dependencies: ["PbEssentials"]),
-        .testTarget(
-            name: "PbUIEssentialsTests",
-            dependencies: ["PbEssentials", "PbUIEssentials"]),
     ]
 )
