@@ -1,7 +1,8 @@
 #if os(macOS)
+
 import AppKit
 
-/// Removes background from TextEditor
+/// Removes background from TextEditor.
 extension NSTextView {
     open override var frame: CGRect {
         didSet {
@@ -12,7 +13,7 @@ extension NSTextView {
     }
 }
 
-/// Removes background from List
+/// Removes background from List.
 extension NSTableView {
     open override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
