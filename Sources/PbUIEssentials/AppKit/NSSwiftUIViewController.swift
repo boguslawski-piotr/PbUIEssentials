@@ -2,7 +2,7 @@ import SwiftUI
 
 #if os(macOS)
 
-public class SwiftUIViewController: NSViewController, ObservableObject {
+public class NSSwiftUIViewController: NSViewController, ObservableObject {
     @Published public var viewBounds: NSRect = NSRect.zero
     @Published public var viewFrame: NSRect = NSRect.zero
 

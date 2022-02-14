@@ -15,22 +15,22 @@ public extension View {
 }
 
 public extension View {
-    func SoftHDivider(opacity: Double = 0.1) -> some View {
+    func HDivider(opacity: Double = 0.1) -> some View {
         Color(.gray)
             .opacity(opacity)
             .frame(height: 0.5)
     }
 
-    func SoftVDivider(opacity: Double = 0.1) -> some View {
+    func VDivider(opacity: Double = 0.1) -> some View {
         Color(.gray)
             .opacity(opacity)
             .frame(width: 0.5)
     }
 }
 
-extension View {
+public extension View {
     @ViewBuilder
-    public func navigationViewStyle(stacked: Bool) -> some View {
+    func navigationViewStyle(stacked: Bool) -> some View {
 #if !os(macOS)
         if stacked {
             self.navigationViewStyle(.stack)
@@ -47,7 +47,6 @@ extension View {
 
 public struct DeviceRotationViewModifier: ViewModifier {
     let action: (UIDeviceOrientation) -> Void
-    
     public func body(content: Content) -> some View {
         content
             .onReceive(NotificationCenter.default.publisher(for: UIDevice.orientationDidChangeNotification)) { _ in
@@ -56,8 +55,8 @@ public struct DeviceRotationViewModifier: ViewModifier {
     }
 }
 
-extension View {
-    public func onRotate(perform action: @escaping (UIDeviceOrientation) -> Void) -> some View {
+public extension View {
+    func onRotate(perform action: @escaping (UIDeviceOrientation) -> Void) -> some View {
         self.modifier(DeviceRotationViewModifier(action: action))
     }
 }

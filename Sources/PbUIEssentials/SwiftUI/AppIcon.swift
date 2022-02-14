@@ -19,14 +19,18 @@ public struct AppIcon: View {
             Image(systemName: systemImage)
                 .resizable()
                 .foregroundColor(imageColor)
+                .symbolRenderingMode(.multicolor)
                 .aspectRatio(nil, contentMode: .fit)
             if versionInfo {
+                Text("")
                 Text(Bundle.main.displayName).font(.largeTitle).padding(.top, 10)
                 Text(Bundle.main.version)
+                Text("")
                 Text(Bundle.main.copyright)
             }
             if progressView {
                 ProgressView()
+                    .padding(.top, 20)
             }
         }
     }
