@@ -1,5 +1,7 @@
 import SwiftUI
 
+#if os(macOS)
+
 public class SwiftUIViewController: NSViewController, ObservableObject {
     @Published public var viewBounds: NSRect = NSRect.zero
     @Published public var viewFrame: NSRect = NSRect.zero
@@ -37,3 +39,5 @@ public class SwiftUIViewController: NSViewController, ObservableObject {
         }
     }
 }
+
+#endif

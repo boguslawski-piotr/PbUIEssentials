@@ -27,3 +27,39 @@ public extension View {
             .frame(width: 0.5)
     }
 }
+
+extension View {
+    @ViewBuilder
+    public func navigationViewStyle(stacked: Bool) -> some View {
+#if !os(macOS)
+        if stacked {
+            self.navigationViewStyle(.stack)
+        } else {
+            self.navigationViewStyle(.columns)
+        }
+#else
+        self
+#endif
+    }
+}
+
+#if !os(macOS)
+
+public struct DeviceRotationViewModifier: ViewModifier {
+    let action: (UIDeviceOrientation) -> Void
+    
+    public func body(content: Content) -> some View {
+        content
+            .onReceive(NotificationCenter.default.publisher(for: UIDevice.orientationDidChangeNotification)) { _ in
+                action(UIDevice.current.orientation)
+            }
+    }
+}
+
+extension View {
+    public func onRotate(perform action: @escaping (UIDeviceOrientation) -> Void) -> some View {
+        self.modifier(DeviceRotationViewModifier(action: action))
+    }
+}
+
+#endif

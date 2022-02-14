@@ -13,16 +13,14 @@ let package = Package(
     ],
     dependencies: [
         // .package(url: /* package url */, from: "1.0.0"),
-//        .package(path: "../PbEssentials")
+        .package(path: "../PbEssentials")
     ],
     targets: [
         .target(
             name: "PbUIEssentials",
-            dependencies: []),
-//            dependencies: ["PbEssentials"]),
+            dependencies: ["PbEssentials"]),
         .testTarget(
             name: "PbUIEssentialsTests",
-            dependencies: ["PbUIEssentials"]),
-//            dependencies: ["PbEssentials", "PbUIEssentials"]),
+            dependencies: ["PbEssentials", "PbUIEssentials"]),
     ]
 )
