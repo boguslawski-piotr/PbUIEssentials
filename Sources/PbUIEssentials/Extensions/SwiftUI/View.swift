@@ -1,18 +1,18 @@
 import SwiftUI
 
 public extension View {
-    func roundedBorder<S>(_ content: S, cornerRadius: CGFloat = 6, lineWidth: CGFloat = 1) -> some View where S: ShapeStyle {
-        self.overlay(RoundedRectangle(cornerRadius: cornerRadius).stroke(content, lineWidth: lineWidth))
+    func roundedBorder<S>(_ content: S, cornerRadius: CGFloat = 6, lineWidth: CGFloat = 1, style: RoundedCornerStyle = .continuous) -> some View where S: ShapeStyle {
+        self.overlay(RoundedRectangle(cornerRadius: cornerRadius, style: style).stroke(content, lineWidth: lineWidth))
     }
 
-    func roundedRectangle<S>(_ content: S, cornerRadius: CGFloat = 6, style: FillStyle = FillStyle()) -> some View where S: ShapeStyle {
-        self.overlay(RoundedRectangle(cornerRadius: cornerRadius).fill(content, style: style))
+    func roundedRectangle<S>(_ content: S, cornerRadius: CGFloat = 6, cornerStyle: RoundedCornerStyle = .continuous, fillStyle: FillStyle = FillStyle()) -> some View where S: ShapeStyle {
+        self.overlay(RoundedRectangle(cornerRadius: cornerRadius, style: cornerStyle).fill(content, style: fillStyle))
     }
 }
 
 public extension View {
-    func roundedBorder(cornerRadius: CGFloat = 6, lineWidth: CGFloat = 1) -> some View {
-        self.overlay(RoundedRectangle(cornerRadius: cornerRadius).stroke(.quaternary, lineWidth: lineWidth))
+    func roundedBorder(cornerRadius: CGFloat = 6, lineWidth: CGFloat = 1, style: RoundedCornerStyle = .continuous) -> some View {
+        self.roundedBorder(.quaternary, cornerRadius: cornerRadius, lineWidth: lineWidth, style: style)
     }
 }
 
