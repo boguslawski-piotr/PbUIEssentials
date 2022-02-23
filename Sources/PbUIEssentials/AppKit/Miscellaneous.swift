@@ -3,17 +3,6 @@
 import AppKit
 import PbEssentials
 
-/// Removes background from TextEditor.
-extension NSTextView {
-    open override var frame: CGRect {
-        didSet {
-            backgroundColor = .clear
-            drawsBackground = true
-        }
-        
-    }
-}
-
 /// Removes background from List.
 extension NSTableView {
     open override func viewDidMoveToWindow() {

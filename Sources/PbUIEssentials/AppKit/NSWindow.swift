@@ -1,3 +1,7 @@
+/// Swift PbUIEssentials
+/// Copyright (c) Piotr Boguslawski
+/// MIT license, see License.md file for details.
+
 #if os(macOS)
 
 import AppKit

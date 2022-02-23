@@ -1,3 +1,7 @@
+/// Swift PbUIEssentials
+/// Copyright (c) Piotr Boguslawski
+/// MIT license, see License.md file for details.
+
 import SwiftUI
 
 extension Text {
