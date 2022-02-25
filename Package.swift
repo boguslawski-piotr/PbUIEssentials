@@ -12,11 +12,12 @@ let package = Package(
             targets: ["PbUIEssentials"]),
     ],
     dependencies: [
-        .package(path: "../PbEssentials")
+        .package(path: "../PbEssentials"),
+        .package(path: "../PbRepository")
     ],
     targets: [
         .target(
             name: "PbUIEssentials",
-            dependencies: ["PbEssentials"]),
+            dependencies: ["PbEssentials", "PbRepository"]),
     ]
 )

@@ -253,6 +253,11 @@ open class PbWindowController: NSObject, NSWindowDelegate, PbObservableObject {
     
     // MARK: Utilities
     
+    open var isVisible: Bool {
+        if case .notVisible = status { return false }
+        return true
+    }
+    
     open func windowDidMove(_ notification: Notification) {
         saveState()
     }
