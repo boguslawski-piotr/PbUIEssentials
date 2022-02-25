@@ -7,10 +7,21 @@
 import SwiftUI
 import PbEssentials
 
+public extension NSViewController {
+    var viewWindow: NSWindow? {
+        view.window
+    }
+    var topWindow: NSWindow! {
+        if let window = viewWindow?.attachedSheet { return window }
+        else {
+            assert(viewWindow != nil, "This property should not be used unless the view is installed in the window.")
+            return viewWindow
+        }
+    }
+}
+
 open class PbViewController: NSViewController, PbObservableObject {
-    // MARK: Public interface
-    
-    open var window: NSWindow? { view.window }
+    // MARK: Definitions
     
     open override var title: String? {
         get { super.title }
@@ -20,19 +31,25 @@ open class PbViewController: NSViewController, PbObservableObject {
         }
     }
 
-    public init<V: View>(_ view: V) {
+    // MARK: Initialization
+    
+    public init<V: View>(name: String? = nil, _ view: V) {
         super.init(nibName: nil, bundle: nil)
         self.view = NSHostingView(rootView: view.environmentObject(self))
     }
 
-    public convenience init<V: View>(@ViewBuilder view: () -> V) {
-        self.init(view())
+    public convenience init<V: View>(name: String? = nil, @ViewBuilder _ view: () -> V) {
+        self.init(name: name, view())
+    }
+
+    deinit {
+        dbg("deinit")
     }
 
     // MARK: Very unimportant code ;)
     
     public required init?(coder: NSCoder) {
-        fatalError("NSSwiftUIViewController.init(coder:) has not been implemented.")
+        fatalError("PbViewController.init(coder:) has not been implemented.")
     }
 }
 

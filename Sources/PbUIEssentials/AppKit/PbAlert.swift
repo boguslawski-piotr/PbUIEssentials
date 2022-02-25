@@ -24,7 +24,7 @@ open class PbAlert: PbAuxiliaryModalWindow {
         self.message = message
         self.comment = comment
         self.buttons = buttons ?? [Button("OK", .primary)]
-        self.width = width ?? .init(uncheckedBounds: (300, 600))
+        self.width = width ?? .init(uncheckedBounds: (350, 500))
         super.init(image)
     }
     

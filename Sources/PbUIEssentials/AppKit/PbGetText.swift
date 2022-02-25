@@ -27,12 +27,12 @@ open class PbGetText: PbAuxiliaryModalWindow {
         runModal(asSheet: asSheet, position: position) == .OK ? text : nil
     }
     
-    open func runModalSheet(for window: NSWindow) async -> String? {
-        await runModalSheet(for: window) == .OK ? text : nil
+    open func runModalSheet(for window: NSWindow, critical: Bool = false) async -> String? {
+        await runModalSheet(for: window, critical: critical) == .OK ? text : nil
     }
 
-    open func runModalSheet(for window: NSWindow, completion handler: @escaping (String?) -> Void) {
-        runModalSheet(for: window) { [weak self] result in
+    open func runModalSheet(for window: NSWindow, critical: Bool = false, completion handler: @escaping (String?) -> Void) {
+        runModalSheet(for: window, critical: critical) { [weak self] result in
             handler(result == .OK ? self?.text : nil)
         }
     }

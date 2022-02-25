@@ -7,6 +7,7 @@
 import SwiftUI
 import PbEssentials
 
+@MainActor
 open class PbAuxiliaryModalWindow: PbObservableObject {
     // MARK: ...?
 
@@ -25,7 +26,7 @@ open class PbAuxiliaryModalWindow: PbObservableObject {
     }
     
     open func makeWindowController() -> PbWindowController {
-        preconditionFailure("You should always create a subclass of PbAuxiliaryWindow.")
+        preconditionFailure("You should always create a subclass of PbAuxiliaryModalWindow.")
     }
     
     @discardableResult
@@ -36,14 +37,14 @@ open class PbAuxiliaryModalWindow: PbObservableObject {
     }
     
     @discardableResult
-    open func runModalSheet(for window: NSWindow) async -> NSApplication.ModalResponse {
-        let result = await windowController.runModalSheet(for: window)
+    open func runModalSheet(for window: NSWindow, critical: Bool = false) async -> NSApplication.ModalResponse {
+        let result = await windowController.runModalSheet(for: window, critical: critical)
         autoRelease()
         return result
     }
     
-    open func runModalSheet(for window: NSWindow, completion handler: ((NSApplication.ModalResponse) -> Void)? = nil) {
-        windowController.runModalSheet(for: window) { [weak self] result in
+    open func runModalSheet(for window: NSWindow, critical: Bool = false, completion handler: ((NSApplication.ModalResponse) -> Void)? = nil) {
+        windowController.runModalSheet(for: window, critical: critical) { [weak self] result in
             self?.autoRelease()
             handler?(result)
         }
