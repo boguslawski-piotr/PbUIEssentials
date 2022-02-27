@@ -20,8 +20,19 @@ open class PbSplitViewController: NSSplitViewController, PbObservableObject {
     @PbStored("") open var state = State()
     
     open var views: [AnyView]!
-    open var name: String?
+    open var name: String = "" {
+        didSet {
+            nameDidSet()
+        }
+    }
     
+    open func nameDidSet() {
+        if !name.isEmpty {
+            _state.name = name + ".\(self.classForCoder)"
+            saveState()
+        }
+    }
+
     open override var title: String? {
         get { super.title }
         set {
@@ -35,11 +46,8 @@ open class PbSplitViewController: NSSplitViewController, PbObservableObject {
     public init(name: String? = nil, _ views: [AnyView]) {
         super.init(nibName: nil, bundle: nil)
         self.views = views.map { AnyView($0.environmentObject(self)) }
-        self.name = name?.asPathComponent()
-        if self.name != nil {
-            self.name! += ".\(self.classForCoder)"
-            _state.name = self.name!
-        }
+        self.name = name?.asPathComponent() ?? ""
+        nameDidSet()
     }
     
     public convenience init<V: View>(name: String? = nil, _ view: V) {
@@ -95,13 +103,10 @@ open class PbSplitViewController: NSSplitViewController, PbObservableObject {
     open func saveState() {
         guard restoreStateDidEnd else { return }
         guard views.count > 1 else { return }
-        let newState = State(
+        state = State(
             sidebarFrame: NSStringFromRect(splitViewItems[0].viewController.view.frame),
             isSidebarCollapsed: splitViewItems[0].isCollapsed
         )
-        if newState != state {
-            state = newState
-        }
     }
     
     open func restoreState() {

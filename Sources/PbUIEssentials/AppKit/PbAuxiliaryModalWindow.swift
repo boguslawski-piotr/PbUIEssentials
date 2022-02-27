@@ -15,7 +15,7 @@ open class PbAuxiliaryModalWindow: PbObservableObject {
     
     open func autoRelease() {
         if releaseWhenClosed {
-            windowController.release()
+            windowController.release1()
         }
     }
     

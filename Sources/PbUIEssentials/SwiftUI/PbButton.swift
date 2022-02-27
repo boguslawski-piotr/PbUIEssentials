@@ -6,29 +6,29 @@ import SwiftUI
 
 // MARK: Public interface
 
-public enum ButtonRoleEx {
+public enum PbButtonRole {
     case primary, secondary, cancel, destructive
 }
 
 public extension View {
-    func PbButton<S: StringProtocol>(_ title: S, role: ButtonRoleEx? = nil, action: @escaping () -> Void) -> some View {
+    func PbButton<S: StringProtocol>(_ title: S, role: PbButtonRole? = nil, action: @escaping () -> Void) -> some View {
         Button(title, role: ButtonRole(role), action: action)
             .buttonStyle(PbButtonStyleImplementation(role))
     }
     
-    func PbButton<S: StringProtocol>(_ title: S, systemImage: String, imageScale: Image.Scale = .medium, role: ButtonRoleEx? = nil, action: @escaping () -> Void) -> some View {
+    func PbButton<S: StringProtocol>(_ title: S, systemImage: String, imageScale: Image.Scale = .medium, role: PbButtonRole? = nil, action: @escaping () -> Void) -> some View {
         Button(role: ButtonRole(role), action: action, label: {
             Label(title, systemImage: systemImage).imageScale(imageScale)
         }).buttonStyle(PbButtonStyleImplementation(role))
     }
     
-    func PbImageButton(_ systemImage: String, imageScale: Image.Scale = .large, role: ButtonRoleEx? = nil, action: @escaping () -> Void) -> some View {
+    func PbImageButton(_ systemImage: String, imageScale: Image.Scale = .large, role: PbButtonRole? = nil, action: @escaping () -> Void) -> some View {
         Button(role: ButtonRole(role), action: action, label: {
             Image(systemName: systemImage).imageScale(imageScale)
         }).buttonStyle(PbButtonStyleImplementation(role, imageButton: true))
     }
 
-    func PbToolbarButton(_ systemImage: String, imageScale: Image.Scale = .large, role: ButtonRoleEx? = nil, action: @escaping () -> Void) -> some View {
+    func PbToolbarButton(_ systemImage: String, imageScale: Image.Scale = .large, role: PbButtonRole? = nil, action: @escaping () -> Void) -> some View {
         Button(role: ButtonRole(role), action: action, label: {
             let style = PbButtonStyleImplementation(role, imageButton: true)
             Image(systemName: systemImage)
@@ -38,7 +38,7 @@ public extension View {
         })
     }
 
-    func PbToolbarButton<Content: View>(_ systemImage: String, imageScale: Image.Scale = .large, role: ButtonRoleEx? = nil, @ViewBuilder content: @escaping () -> Content) -> some View {
+    func PbToolbarButton<Content: View>(_ systemImage: String, imageScale: Image.Scale = .large, role: PbButtonRole? = nil, @ViewBuilder content: @escaping () -> Content) -> some View {
         SwiftUI.Menu {
             content()
         } label: {
@@ -53,7 +53,7 @@ public extension View {
 }
 
 public extension View {
-    func PbButtonStyle(role: ButtonRoleEx? = nil) -> some View {
+    func PbButtonStyle(role: PbButtonRole? = nil) -> some View {
         self.buttonStyle(PbButtonStyleImplementation(role))
     }
 }
@@ -61,7 +61,7 @@ public extension View {
 // MARK: Implementation
 
 public extension ButtonRole {
-    init?(_ role: ButtonRoleEx?) {
+    init?(_ role: PbButtonRole?) {
         guard role != nil else { return nil }
         switch role! {
         case .cancel: self = .cancel
@@ -72,14 +72,14 @@ public extension ButtonRole {
 }
 
 public struct PbButtonStyleImplementation: ButtonStyle {
-    let role: ButtonRoleEx?
+    let role: PbButtonRole?
     let imageButton: Bool
     let font: Font
     let minWidth: CGFloat
     let paddingVertical: CGFloat
     let paddingHorizontal: CGFloat
 
-    public init(_ role: ButtonRoleEx?, imageButton: Bool = false) {
+    public init(_ role: PbButtonRole?, imageButton: Bool = false) {
         self.role = role
         self.imageButton = imageButton
         font = role == .primary ? Font.body.bold() : Font.body
@@ -122,10 +122,9 @@ public struct PbButtonStyleImplementation: ButtonStyle {
             .padding(.horizontal, paddingHorizontal)
             .foregroundColor(foregroundColor(configuration.isPressed))
             .modifier(if: !imageButton, { label in
-                    label
-                        .font(font)
-                        .background(background(configuration.isPressed), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
-                
+                label
+                    .font(font)
+                    .background(background(configuration.isPressed), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
             })
     }
 }

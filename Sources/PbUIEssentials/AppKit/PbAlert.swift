@@ -12,9 +12,9 @@ open class PbAlert: PbAuxiliaryModalWindow {
 
     public struct Button: Hashable, Equatable {
         public var title: String
-        public var role: ButtonRoleEx
+        public var role: PbButtonRole
 
-        public init(_ title: String, _ role: ButtonRoleEx = .secondary) {
+        public init(_ title: String, _ role: PbButtonRole = .secondary) {
             self.title = title
             self.role = role
         }
@@ -65,8 +65,6 @@ open class PbAlert: PbAuxiliaryModalWindow {
         )
     }
     
-    // TODO: obsluzyc ustawianie wielkosci okna...
-
     open override func makeWindowController() -> PbWindowController {
         let controller = PbWindowController(
             AlertView()

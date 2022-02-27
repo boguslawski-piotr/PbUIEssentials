@@ -7,12 +7,13 @@
 import SwiftUI
 import PbEssentials
 import PbRepository
+import CryptoKit
 
 @MainActor
 open class PbWindowController: NSObject, NSWindowDelegate, PbObservableObject {
     // MARK: Definitions
     
-    public enum Status: Codable {
+    public enum Status: Codable, Equatable {
         case notVisible, modal, modalSheet, presented(asSheet: Bool)
     }
     
@@ -23,24 +24,47 @@ open class PbWindowController: NSObject, NSWindowDelegate, PbObservableObject {
     }
     
     public struct State: Codable, Equatable {
-        var frame: String = NSStringFromRect(NSZeroRect)
-        var isVisible: Bool = false
-        var isKey: Bool = false
-        var isMiniaturized: Bool = false
-        var isZoomed: Bool = false
+        public var status: Status = .notVisible
+        public var frame: String = NSStringFromRect(NSZeroRect)
+        public var isVisible: Bool = false
+        public var isKey: Bool = false
+        public var isMiniaturized: Bool = false
+        public var isZoomed: Bool = false
     }
 
+    public class ViewWindow: NSWindow {
+        public var notZoomedFrame: NSRect = .zero
+    }
+    
     @PbPublished(.withLock) open var status: Status = .notVisible
     @PbStored("") open var state: State = State()
     
     open var viewController: PbSplitViewController?
-    open var viewWindow: NSWindow?
+    open var viewWindow: ViewWindow?
 
     open var views: [AnyView]!
-    open var title: String!
     open var style: Style!
-    open var name: String?
-    
+
+    open var title: String! {
+        didSet {
+            viewWindow?.title = title
+        }
+    }
+
+    open var name: String = "" {
+        didSet {
+            nameDidSet()
+        }
+    }
+
+    open func nameDidSet() {
+        if !name.isEmpty {
+            _state.name = name + ".\(self.classForCoder)"
+            viewController?.name = name
+            saveState()
+        }
+    }
+
     // MARK: Initialization
     
     public init(title: String? = nil, style: Style? = nil, name: String? = nil, _ views: [AnyView]) {
@@ -48,11 +72,8 @@ open class PbWindowController: NSObject, NSWindowDelegate, PbObservableObject {
         self.views = views
         self.title = title ?? Bundle.main.displayName
         self.style = style ?? defaultStyle()
-        self.name = name?.asPathComponent()
-        if self.name != nil {
-            self.name! += ".\(self.classForCoder)"
-            _state.name = self.name!
-        }
+        self.name = name?.asPathComponent() ?? ""
+        nameDidSet()
     }
 
     public convenience init<V: View>(title: String? = nil, style: Style? = nil, name: String? = nil, _ view: V) {
@@ -75,10 +96,10 @@ open class PbWindowController: NSObject, NSWindowDelegate, PbObservableObject {
     open func makeViewWindow() {
         guard viewWindow == nil else { return }
         makeViewController()
-        viewWindow = NSWindow(contentViewController: viewController!)
+        viewWindow = ViewWindow(contentViewController: viewController!)
         viewWindow!.styleMask = self.style
         viewWindow!.title = self.title
-        viewWindow!.identifier = name != nil ? .init(name!) : nil
+        viewWindow!.identifier = !name.isEmpty ? .init(name) : nil
         viewWindow!.delegate = self
     }
     
@@ -88,7 +109,6 @@ open class PbWindowController: NSObject, NSWindowDelegate, PbObservableObject {
         guard windowWithSheet == nil else { return }
         windowWithSheet = NSWindow(contentRect: .zero, styleMask: [.borderless], backing: .buffered, defer: true)
         windowWithSheet!.isReleasedWhenClosed = false
-        windowWithSheet!.delegate = self
     }
     
     // MARK: Modal presentation
@@ -103,7 +123,7 @@ open class PbWindowController: NSObject, NSWindowDelegate, PbObservableObject {
         
         if asSheet {
             makeWindowForSheet()
-            setPosition(position, for: windowWithSheet!, displayed: self.viewWindow!)
+            setPosition(position, for: windowWithSheet!, displaying: self.viewWindow!)
             windowWithSheet!.makeKeyAndOrderFront(self)
             DispatchQueue.main.async { [weak self] in
                 if let self = self {
@@ -117,7 +137,7 @@ open class PbWindowController: NSObject, NSWindowDelegate, PbObservableObject {
         }
         else {
             adjustViewWindowStyle(modal: true)
-            if !restoreState() {
+            if !restoreViewWindowPositionAndSize() {
                 setPosition(position, for: viewWindow!)
             }
             viewWindow!.orderFront(self)
@@ -177,49 +197,82 @@ open class PbWindowController: NSObject, NSWindowDelegate, PbObservableObject {
     
     @PbWithLock var shouldPresent = false
 
-    open func present(asSheet: Bool = true, position: Position = .systemDecides, delayedBy ti: TimeInterval = 0) {
+    open func present(asSheet: Bool = true, position: Position = .systemDecides, delayedBy ti: TimeInterval = 0, completion handler: ((Bool) -> Void)? = nil) {
         shouldPresent = true
         DispatchQueue.main.asyncAfter(deadline: .now() + ti) { [weak self] in
-            guard let self = self else { return }
-            guard self.shouldPresent else { return }
-            switch self.status {
-            case .notVisible:
-                break
-            case .modal:
-                return
-            case .modalSheet:
-                return
-            case .presented(asSheet: let asSheet):
+            guard let self = self else { handler?(false); return }
+            guard self.shouldPresent else { handler?(false); return }
+            
+            if !self.makeKey() {
+                self.makeViewWindow()
                 if asSheet {
-                    self.windowWithSheet?.makeKeyAndOrderFront(self)
-                } else  {
+                    self.status = .presented(asSheet: true)
+                    self.makeWindowForSheet()
+                    self.setPosition(position, for: self.windowWithSheet!, displaying: self.viewWindow!)
+                    self.windowWithSheet!.makeKeyAndOrderFront(self)
+                    self.windowWithSheet!.beginSheet(self.viewWindow!, completionHandler: { _ in })
+                } else {
+                    self.status = .presented(asSheet: false)
+                    self.adjustViewWindowStyle(modal: false)
+                    if !self.restoreViewWindowPositionAndSize() {
+                        self.setPosition(position, for: self.viewWindow!)
+                    }
                     self.viewWindow?.makeKeyAndOrderFront(self)
                 }
-                return
             }
-            
-            self.makeViewWindow()
-            if asSheet {
-                self.status = .presented(asSheet: true)
-                self.makeWindowForSheet()
-                self.setPosition(position, for: self.windowWithSheet!, displayed: self.viewWindow!)
-                self.windowWithSheet!.makeKeyAndOrderFront(self)
-                self.windowWithSheet!.beginSheet(self.viewWindow!, completionHandler: { _ in })
-            } else {
-                self.status = .presented(asSheet: false)
-                self.adjustViewWindowStyle(modal: false)
-                if !self.restoreState() {
-                    self.setPosition(position, for: self.viewWindow!)
-                }
-                self.viewWindow?.makeKeyAndOrderFront(self)
-            }
+            handler?(true)
         }
     }
     
-    open func windowWillClose(_ notification: Notification) {
-        if let window = notification.object as? NSWindow, window === viewWindow {
-            dbg("will close", window.identifier as Any, status)
-            status = .notVisible
+    @discardableResult
+    open func restore(delayedBy ti: TimeInterval = 0, completion handler: ((Bool) -> Void)? = nil) -> Bool {
+        switch state.status {
+        case .presented(asSheet: false):
+            fallthrough
+        case .notVisible:
+            shouldPresent = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + ti) { [weak self] in
+                guard let self = self else { handler?(false); return }
+                guard self.shouldPresent else { handler?(false); return }
+                
+                self.makeViewWindow()
+                self.status = .presented(asSheet: false)
+                self.adjustViewWindowStyle(modal: false)
+                self.restoreViewWindowPositionAndSize()
+                if self.state.isMiniaturized {
+                    self.viewWindow!.orderBack(self)
+                    self.viewWindow!.miniaturize(self)
+                } else {
+                    if self.state.isVisible {
+                        if self.state.isKey {
+                            self.viewWindow!.makeKeyAndOrderFront(self)
+                        } else {
+                            self.viewWindow!.orderFront(self)
+                        }
+                    }
+                }
+                handler?(true)
+            }
+            return true
+            
+        default:
+            return false
+        }
+    }
+    
+    @discardableResult
+    open func makeKey(orderFront: Bool = true) -> Bool {
+        guard viewWindow != nil else { return false }
+        switch self.status {
+        case .notVisible:
+            return false
+        default:
+            if orderFront {
+                viewWindow?.makeKeyAndOrderFront(self)
+            } else {
+                viewWindow?.makeKey()
+            }
+            return true
         }
     }
     
@@ -239,8 +292,14 @@ open class PbWindowController: NSObject, NSWindowDelegate, PbObservableObject {
     
     // MARK: Deinitialization
     
-    open func release() {
+    @PbWithLock var releaseInProgress = false
+    
+    open func release1() {
+        releaseInProgress = true
         DispatchQueue.main.async { [weak self] in
+            self?.endModal(.abort)
+            self?.close()
+            self?.status = .notVisible
             self?.viewController = nil
             self?.viewWindow = nil
             self?.windowWithSheet = nil
@@ -251,44 +310,81 @@ open class PbWindowController: NSObject, NSWindowDelegate, PbObservableObject {
         dbg("deinit")
     }
     
-    // MARK: Utilities
+    // MARK: Utilities & window delegate
     
     open var isVisible: Bool {
         if case .notVisible = status { return false }
-        return true
+        return viewWindow?.isVisible ?? false
+    }
+    
+    open func windowDidBecomeMain(_ notification: Notification) {
+        saveState()
+    }
+    
+    open func windowDidResignMain(_ notification: Notification) {
+        if !releaseInProgress {
+            saveState()
+        }
+    }
+
+    open func windowDidBecomeKey(_ notification: Notification) {
+        saveState()
+    }
+    
+    open func windowDidResignKey(_ notification: Notification) {
+        if !releaseInProgress {
+            saveState()
+        }
+    }
+    
+    open func windowDidMiniaturize(_ notification: Notification) {
+        saveState()
+    }
+    
+    open func windowDidDeminiaturize(_ notification: Notification) {
+        saveState()
     }
     
     open func windowDidMove(_ notification: Notification) {
+        windowdidMoveOrResize()
+    }
+    
+    open func windowDidEndLiveResize(_ notification: Notification) {
+        windowdidMoveOrResize()
+    }
+    
+    open func windowdidMoveOrResize() {
+        guard viewWindow != nil else { return }
+        if !viewWindow!.isZoomed || !style.contains(.resizable) {
+            viewWindow!.notZoomedFrame = viewWindow!.frame
+        }
         saveState()
+    }
+
+    open func windowWillClose(_ notification: Notification) {
+        if !releaseInProgress {
+            // Saving state should be delayed because isVisible flag is
+            // still true here and there is no windowDidClose event :(
+            DispatchQueue.main.async {
+                self.saveState()
+            }
+            status = .notVisible
+        }
     }
     
     open func saveState() {
         guard viewWindow != nil else { return }
-        
-        let newState = State(
-            frame: NSStringFromRect(viewWindow!.frame), // frame: NSStringFromRect(notZoomedFrame),
+        state = State(
+            status: status,
+            frame: NSStringFromRect(viewWindow!.notZoomedFrame),
             isVisible: viewWindow!.isVisible,
             isKey: viewWindow!.isKeyWindow,
             isMiniaturized: viewWindow!.isMiniaturized,
             isZoomed: viewWindow!.isZoomed
         )
-        if newState != state {
-            state = newState
-        }
-    }
-
-    open func restoreState() -> Bool {
-        if viewWindow != nil {
-            let frame = NSRectFromString(state.frame)
-            if !frame.isEmpty {
-                viewWindow!.setFrame(frame, display: false)
-                return true
-            }
-        }
-        return false
     }
     
-    open func setPosition(_ position: Position, for window: NSWindow, displayed sheetWindow: NSWindow? = nil) {
+    open func setPosition(_ position: Position, for window: NSWindow, displaying sheetWindow: NSWindow? = nil) {
         switch position {
         case .systemDecides:
             if sheetWindow != nil {
@@ -327,6 +423,26 @@ open class PbWindowController: NSObject, NSWindowDelegate, PbObservableObject {
                 window.center()
             }
         }
+    }
+    
+    @discardableResult
+    open func restoreViewWindowPositionAndSize() -> Bool {
+        guard viewWindow != nil else { return false }
+        let frame = NSRectFromString(state.frame)
+        guard !frame.isEmpty else { return false }
+
+        let state = self.state
+        if style.contains(.resizable) {
+            viewWindow!.setFrame(frame, display: false)
+        } else {
+            viewWindow!.setFrameTopLeftPoint(NSPoint(x: frame.minX, y: frame.maxY))
+        }
+
+        viewWindow!.notZoomedFrame = frame
+        if state.isZoomed && style.contains(.resizable) {
+            viewWindow!.zoom(self)
+        }
+        return true
     }
     
     open func adjustViewWindowStyle(modal: Bool) {
