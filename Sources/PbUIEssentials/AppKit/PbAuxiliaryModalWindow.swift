@@ -9,17 +9,10 @@ import PbEssentials
 
 @MainActor
 open class PbAuxiliaryModalWindow: PbObservableObject {
-    // MARK: ...?
+    // MARK: // MARK: Creating / closing
 
-    open var releaseWhenClosed = true
-    
-    open func autoRelease() {
-        if releaseWhenClosed {
-            windowController.release1()
-        }
-    }
-    
     var _windowController: PbWindowController?
+    
     open var windowController: PbWindowController {
         _windowController = _windowController == nil ? makeWindowController() : _windowController
         return _windowController!
@@ -28,7 +21,17 @@ open class PbAuxiliaryModalWindow: PbObservableObject {
     open func makeWindowController() -> PbWindowController {
         preconditionFailure("You should always create a subclass of PbAuxiliaryModalWindow.")
     }
+
+    open var releaseWhenClosed = true
     
+    open func autoRelease() {
+        if releaseWhenClosed {
+            windowController.closeAndRelease()
+        }
+    }
+    
+    // MARK: Modal presentation
+
     @discardableResult
     open func runModal(asSheet: Bool = true, position: PbWindowController.Position = .screenCenter) -> NSApplication.ModalResponse {
         let result = windowController.runModal(asSheet: asSheet, position: position)

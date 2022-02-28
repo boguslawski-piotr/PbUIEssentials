@@ -7,7 +7,6 @@
 import SwiftUI
 import PbEssentials
 import PbRepository
-import CryptoKit
 
 @MainActor
 open class PbWindowController: NSObject, NSWindowDelegate, PbObservableObject {
@@ -45,13 +44,13 @@ open class PbWindowController: NSObject, NSWindowDelegate, PbObservableObject {
     open var views: [AnyView]!
     open var style: Style!
 
-    open var title: String! {
+    @PbPublished open var title: String = "" {
         didSet {
             viewWindow?.title = title
         }
     }
 
-    open var name: String = "" {
+    @PbPublished open var name: String = "" {
         didSet {
             nameDidSet()
         }
@@ -115,7 +114,7 @@ open class PbWindowController: NSObject, NSWindowDelegate, PbObservableObject {
     
     @discardableResult
     open func runModal(asSheet: Bool = true, position: Position = .screenCenter) -> NSApplication.ModalResponse {
-        guard case .notVisible = status else { dbg("Unable to execute runModal while the window is already on the screen."); return .abort }
+        guard case .notVisible = status else { return .abort }
         
         var result: NSApplication.ModalResponse = .cancel
         makeViewWindow()
@@ -153,7 +152,7 @@ open class PbWindowController: NSObject, NSWindowDelegate, PbObservableObject {
 
     @discardableResult
     open func runModalSheet(for window: NSWindow, critical: Bool = false) async -> NSApplication.ModalResponse {
-        guard case .notVisible = status else { dbg("Unable to execute runModalSheet while the window is already on the screen."); return .abort }
+        guard case .notVisible = status else { return .abort }
 
         makeViewWindow()
         status = .modalSheet
@@ -165,7 +164,7 @@ open class PbWindowController: NSObject, NSWindowDelegate, PbObservableObject {
     }
 
     open func runModalSheet(for window: NSWindow, critical: Bool = false, completion handler: ((NSApplication.ModalResponse) -> Void)? = nil) {
-        guard case .notVisible = status else { dbg("Unable to execute runModalSheet while the window is already on the screen."); handler?(.abort); return }
+        guard case .notVisible = status else { handler?(.abort); return }
 
         makeViewWindow()
         status = .modalSheet
@@ -294,7 +293,7 @@ open class PbWindowController: NSObject, NSWindowDelegate, PbObservableObject {
     
     @PbWithLock var releaseInProgress = false
     
-    open func release1() {
+    open func closeAndRelease() {
         releaseInProgress = true
         DispatchQueue.main.async { [weak self] in
             self?.endModal(.abort)
@@ -304,10 +303,6 @@ open class PbWindowController: NSObject, NSWindowDelegate, PbObservableObject {
             self?.viewWindow = nil
             self?.windowWithSheet = nil
         }
-    }
-    
-    deinit {
-        dbg("deinit")
     }
     
     // MARK: Utilities & window delegate

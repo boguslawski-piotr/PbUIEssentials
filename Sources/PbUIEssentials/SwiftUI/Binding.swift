@@ -15,16 +15,3 @@ public extension Binding {
         )
     }
 }
-
-// TODO: czy to ma sens?
-
-public protocol Bindable {
-    func get<T, Value>(_ keyPath: WritableKeyPath<T, Value>) -> Value
-    func set<T, Value>(_ newValue: Value, in keyPath: WritableKeyPath<T, Value>)
-}
-
-public extension Binding {
-    init<T: Bindable>(_ data: T, _ keyPath: WritableKeyPath<T, Value>) {
-        self.init(get: { data.get(keyPath) }, set: { newValue in data.set(newValue, in: keyPath) })
-    }
-}

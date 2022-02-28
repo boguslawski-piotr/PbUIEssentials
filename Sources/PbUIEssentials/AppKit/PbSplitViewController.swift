@@ -20,7 +20,8 @@ open class PbSplitViewController: NSSplitViewController, PbObservableObject {
     @PbStored("") open var state = State()
     
     open var views: [AnyView]!
-    open var name: String = "" {
+
+    @PbPublished open var name: String = "" {
         didSet {
             nameDidSet()
         }
@@ -33,14 +34,6 @@ open class PbSplitViewController: NSSplitViewController, PbObservableObject {
         }
     }
 
-    open override var title: String? {
-        get { super.title }
-        set {
-            objectWillChange.send()
-            super.title = newValue
-        }
-    }
-    
     // MARK: Initialization
     
     public init(name: String? = nil, _ views: [AnyView]) {
