@@ -11,6 +11,7 @@ public extension NSViewController {
     var viewWindow: NSWindow? {
         view.window
     }
+    
     var topWindow: NSWindow! {
         if let window = viewWindow?.attachedSheet { return window }
         else {
@@ -43,7 +44,7 @@ open class PbViewController: NSViewController, PbObservableObject {
     }
 
     deinit {
-        dbg("deinit")
+        releasePublishers()
     }
 
     // MARK: Very unimportant code ;)
