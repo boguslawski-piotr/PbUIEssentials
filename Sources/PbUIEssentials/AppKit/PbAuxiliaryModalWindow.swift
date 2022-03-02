@@ -8,7 +8,7 @@ import SwiftUI
 import PbEssentials
 
 @MainActor
-open class PbAuxiliaryModalWindow: PbObservableObject {
+open class PbAuxiliaryModalWindow: PbObservableObjectBase {
     // MARK: // MARK: Creating / closing
 
     var _windowController: PbWindowController?
@@ -75,6 +75,7 @@ open class PbAuxiliaryModalWindow: PbObservableObject {
         } else {
             self.image = image!
         }
+        super.init()
     }
     
     // In the next two methods we need to use AnyView instead of "some View"
